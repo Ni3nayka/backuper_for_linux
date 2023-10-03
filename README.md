@@ -4,6 +4,8 @@ backuper_for_linux - a set of scripts for planned and actual data backup for lin
 ## Setup:
 ```
 sudo apt-get install rsync
+sudo apt install python3-tk
+sudo apt-get install python3-pip
 ```
 
 ## example:
