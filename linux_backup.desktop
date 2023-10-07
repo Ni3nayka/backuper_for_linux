@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=true
+Icon=mate-panel-launcher
+Icon[ru]=mate-panel-launcher
+Name[ru]=linux_backup
+Exec=python3 /mnt/423C94AF3C949F89/GitHub/backuper_for_linux/safe_backuper.py /home/ni3nayka/Документы/test_rsync/1 /home/ni3nayka/Документы/test_rsync/2
+Name=test

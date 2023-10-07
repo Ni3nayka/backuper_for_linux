@@ -1,6 +1,7 @@
 '''
 run:
 python3 .../safe_backuper.py original_path backup_path (repeat_flag)
+repeat_flag = 0 : 
 '''
 
 import codecs
@@ -10,19 +11,21 @@ import os
 from sys import argv
 from time import sleep
 import datetime
+import subprocess
 
 TEST_FILE_NAME = "backuper_for_linux.txt"
 NAME_FOR_MESSAGEMOX = "backuper_for_linux"
-DATETIME_BACKUP_DAY = 5 #20
-DATETIME_BACKUP_HOUR = 17  #3
+DATETIME_BACKUP_DAY = 20
+DATETIME_BACKUP_HOUR = 3
 
 window = Tk()
 window.withdraw()
 
-def testDisk(test_catalog):
+def myMessagebox(line,path=""):
+    if path!="": path = "\n" + path
+    messagebox.showerror(NAME_FOR_MESSAGEMOX,"ERROR: " + line + path)
 
-    def myMessagebox(line):
-        messagebox.showerror(NAME_FOR_MESSAGEMOX,"ERROR: " + line + " - " + test_catalog)
+def testDisk(test_catalog):
 
     def openFile(path,key='r'):
         #path = str(os.path.dirname(os.path.abspath(__file__))) + "/" + path
@@ -37,7 +40,7 @@ def testDisk(test_catalog):
             except UnicodeDecodeError: pass   
             except LookupError: pass
         # print("ERROR: unknow file format")
-        myMessagebox("неизвестный кодек файла")
+        myMessagebox("неизвестный кодек файла",test_catalog)
         return None
     
     def generateKey(leight=32):
@@ -48,7 +51,7 @@ def testDisk(test_catalog):
         return key
     
     if not os.path.isdir(test_catalog):
-        myMessagebox("этого каталога не существует")
+        myMessagebox("этого каталога не существует",test_catalog)
         return None
     test_file_catalog = test_catalog + "/" + TEST_FILE_NAME
     try:
@@ -60,18 +63,33 @@ def testDisk(test_catalog):
         # read
         file = openFile(test_file_catalog,'r')
         if file.readlines()!=[key]:
-            myMessagebox("тестовый файл прочитан неверно")
+            myMessagebox("тестовый файл прочитан неверно",test_catalog)
             return None
         file.close()
         return True
-    except: myMessagebox("неизвестная ошибка при тестировании диска")
+    except: myMessagebox("неизвестная ошибка при тестировании диска",test_catalog)
     return False
 
-def backupDisk(original_disk, backup_disk):
-    if testDisk(original_disk):
-        if testDisk(backup_disk):
-            # backupDisk(original_disk,backup_disk)
-            print("test backupDisk")
+def backupDisk(original_path, backup_path):
+    # https://losst.pro/rsync-primery-sinhronizatsii
+    # https://tokmakov.msk.ru/blog/item/445
+    # https://pythononline.ru/osnovy/sistemnye-komandy-s-pomoschyu-python-os-system
+    if testDisk(original_path):
+        if testDisk(backup_path):
+            print("START OPERATING")
+            command = f"rsync -azh -delete -progress {original_path} {backup_path}"
+            #command to be executed 
+            res = subprocess.check_output(command)  #system command 
+            print("Return type: ", type(res))  #type of the value returned 
+            print("Decoded string: ", res.decode("utf-8")) #decoded result
+            # backup = os.system(f"rsync -azh -delete -progress {original_path} {backup_path}")
+            print("END OPERATING - wait 5 seconds...")
+            sleep(5)
+            # if backup!=0: 
+            #     myMessagebox("неизвестная ошибка при копировании диска")
+            #     return False
+            return True
+            
 
 if __name__ == "__main__":
     try:
@@ -85,11 +103,17 @@ if __name__ == "__main__":
                     # wait new backup
                     while datetime.datetime.now().day!=DATETIME_BACKUP_DAY or datetime.datetime.now().hour!=DATETIME_BACKUP_HOUR:
                         sleep(900)
-                        # print("x")
+                    # backup
                     backupDisk(argv[1],argv[2])
-                    sleep(3600)
-            else: backupDisk(argv[1],argv[2])
+                    sleep(4000)
+            else: 
+                backupDisk(argv[1],argv[2])
                 
     except KeyboardInterrupt: print("OFF")
+    # except Exception as err:
+    #     print(f"Unexpected {err=}, {type(err)=}")
+    #     # raise
+    #     print("UNKNOW ERROR")
+    #     sleep(10)
 
     
