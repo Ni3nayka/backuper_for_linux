@@ -1,7 +1,8 @@
 '''
 run:
-python3 .../safe_backuper.py original_path backup_path (repeat_flag)
-repeat_flag = 0 : 
+python3 .../safe_backuper.py original_path backup_path (repeat_flag, backup_day=20, backup_hour=3)
+repeat_flag = 0 - делать копирование в день и час указанный в следующих аргументах
+repeat_flag > 0 - делать копирование раз в n секунд
 '''
 
 import codecs
@@ -11,7 +12,6 @@ import os
 from sys import argv
 from time import sleep
 import datetime
-import subprocess
 
 TEST_FILE_NAME = "backuper_for_linux.txt"
 NAME_FOR_MESSAGEMOX = "backuper_for_linux"
@@ -76,44 +76,56 @@ def backupDisk(original_path, backup_path):
     # https://pythononline.ru/osnovy/sistemnye-komandy-s-pomoschyu-python-os-system
     if testDisk(original_path):
         if testDisk(backup_path):
-            print("START OPERATING")
-            command = f"rsync -azh -delete -progress {original_path} {backup_path}"
-            #command to be executed 
-            res = subprocess.check_output(command)  #system command 
-            print("Return type: ", type(res))  #type of the value returned 
-            print("Decoded string: ", res.decode("utf-8")) #decoded result
-            # backup = os.system(f"rsync -azh -delete -progress {original_path} {backup_path}")
-            print("END OPERATING - wait 5 seconds...")
-            sleep(5)
-            # if backup!=0: 
-            #     myMessagebox("неизвестная ошибка при копировании диска")
-            #     return False
+            print(datetime.datetime.now().strftime("%Y.%m.%d - %H:%M:%S"),"\nSTART OPERATING")
+            backup = os.system(f"rsync -azh --delete --progress {original_path} {backup_path}")
+            print("END OPERATING\n")
+            if backup!=0: 
+                myMessagebox("неизвестная ошибка при копировании диска")
+                return False
             return True
             
-
 if __name__ == "__main__":
     try:
-        print(argv)
+        # print(argv)
         if len(argv)<3: # develop
             print("WARNING: develop mode, NOT BACKUP")
             testDisk("test")
         else:
+            print("original path:",argv[1])
+            print("backup path:",argv[2])
             if len(argv)>3:
+                # настройка режима бекапа
+                dt = int(argv[3])
+                wait_flag = True
+                if dt<=0: 
+                    dt = 4000 # чуть больше часа, чтобы не бекапить 1 час после него
+                    # настройка даты и времени бекапа
+                    try:
+                        DATETIME_BACKUP_DAY = int(argv[4])
+                        DATETIME_BACKUP_HOUR = int(argv[5])
+                    except: pass
+                    print("РЕЖИМ: копирования раз в месяц:")
+                    print("число:",DATETIME_BACKUP_DAY)
+                    print("час:",DATETIME_BACKUP_HOUR)
+                else: 
+                    wait_flag = False
+                    print("РЕЖИМ: копирования раз в N секунд:",dt)
+                print()
                 while True:
-                    # wait new backup
-                    while datetime.datetime.now().day!=DATETIME_BACKUP_DAY or datetime.datetime.now().hour!=DATETIME_BACKUP_HOUR:
-                        sleep(900)
-                    # backup
+                    if wait_flag:
+                        while datetime.datetime.now().day!=DATETIME_BACKUP_DAY or datetime.datetime.now().hour!=DATETIME_BACKUP_HOUR:
+                            sleep(900) # 15 мин
                     backupDisk(argv[1],argv[2])
-                    sleep(4000)
+                    sleep(dt)
             else: 
+                print("РЕЖИМ: одиночное копирование\n")
                 backupDisk(argv[1],argv[2])
-                
+                print("wait 5 seconds...")
+                sleep(5)
     except KeyboardInterrupt: print("OFF")
-    # except Exception as err:
-    #     print(f"Unexpected {err=}, {type(err)=}")
-    #     # raise
-    #     print("UNKNOW ERROR")
-    #     sleep(10)
+    except Exception as err:
+        myMessagebox(f"Unexpected {err=}, {type(err)=}")
+        print("UNKNOW ERROR")
+        raise
 
     
