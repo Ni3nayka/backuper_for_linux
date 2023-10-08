@@ -120,8 +120,8 @@ if __name__ == "__main__":
             else: 
                 print("РЕЖИМ: одиночное копирование\n")
                 backupDisk(argv[1],argv[2])
-                print("wait 5 seconds...")
-                sleep(5)
+                print("press ctrl+C")
+                sleep(9999)
     except KeyboardInterrupt: print("OFF")
     except Exception as err:
         myMessagebox(f"Unexpected {err=}, {type(err)=}")
